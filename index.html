@@ -1,0 +1,2325 @@
+from pathlib import Path
+
+html = r'''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>蓝金锋 | AI Security & Software Engineering</title>
+  <meta
+    name="description"
+    content="蓝金锋的个人技术主页，研究方向包括机器学习和深度学习。"
+  />
+
+  <style>
+    :root {
+      --bg: #07111f;
+      --bg-soft: #0b1728;
+      --panel: rgba(12, 27, 46, 0.72);
+      --panel-solid: #0d1b2d;
+      --text: #eaf2ff;
+      --muted: #93a8c4;
+      --line: rgba(144, 182, 226, 0.15);
+      --primary: #66e3ff;
+      --secondary: #8b7cff;
+      --accent: #56f0b5;
+      --danger: #ff7a90;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+      --radius: 22px;
+      --nav-h: 72px;
+      --cursor-x: 50%;
+      --cursor-y: 50%;
+    }
+
+    body.light {
+      --bg: #f4f8ff;
+      --bg-soft: #eaf1fb;
+      --panel: rgba(255, 255, 255, 0.72);
+      --panel-solid: #ffffff;
+      --text: #10213a;
+      --muted: #5d708c;
+      --line: rgba(24, 57, 96, 0.12);
+      --primary: #0088b8;
+      --secondary: #5e4ee4;
+      --accent: #008f69;
+      --danger: #cf3e5c;
+      --shadow: 0 24px 80px rgba(33, 68, 110, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(102, 227, 255, 0.1), transparent 28%),
+        radial-gradient(circle at 82% 16%, rgba(139, 124, 255, 0.11), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.7;
+      transition: background 0.35s ease, color 0.35s ease;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 52px 52px;
+      mask-image: radial-gradient(circle at center, black 0%, transparent 88%);
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      left: var(--cursor-x);
+      top: var(--cursor-y);
+      z-index: -1;
+      width: 420px;
+      height: 420px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(102, 227, 255, 0.08), transparent 68%);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    canvas#network {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      width: 100%;
+      height: 100%;
+      opacity: 0.8;
+    }
+
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      width: 0%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+      box-shadow: 0 0 16px var(--primary);
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .glass {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    nav {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      z-index: 900;
+      width: min(1180px, calc(100% - 28px));
+      height: var(--nav-h);
+      transform: translateX(-50%);
+      border-radius: 18px;
+    }
+
+    .nav-inner {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px 0 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-mark {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      background: conic-gradient(from 190deg, var(--primary), var(--secondary), var(--accent), var(--primary));
+      box-shadow: 0 0 24px rgba(102, 227, 255, 0.22);
+    }
+
+    .brand-mark::after {
+      content: "</>";
+      position: absolute;
+      inset: 3px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: var(--bg-soft);
+      color: var(--text);
+      font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-links a {
+      padding: 10px 13px;
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      transition: 0.25s ease;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      background: rgba(102, 227, 255, 0.08);
+      color: var(--text);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-button,
+    .menu-button {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.025);
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .icon-button:hover,
+    .menu-button:hover {
+      transform: translateY(-2px);
+      background: rgba(102, 227, 255, 0.08);
+    }
+
+    .menu-button {
+      display: none;
+    }
+
+    main {
+      position: relative;
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      align-items: center;
+      gap: 50px;
+      padding-top: 110px;
+    }
+
+    .status-pill {
+      width: max-content;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 22px;
+      padding: 8px 13px;
+      border: 1px solid rgba(86, 240, 181, 0.25);
+      border-radius: 999px;
+      background: rgba(86, 240, 181, 0.06);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 rgba(86, 240, 181, 0.5);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      70% {
+        box-shadow: 0 0 0 10px rgba(86, 240, 181, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(86, 240, 181, 0);
+      }
+    }
+
+    .eyebrow {
+      color: var(--primary);
+      font: 700 14px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 800px;
+      margin: 15px 0 22px;
+      font-size: clamp(52px, 8vw, 96px);
+      line-height: 0.96;
+      letter-spacing: -0.055em;
+    }
+
+    .gradient-text {
+      color: transparent;
+      background: linear-gradient(100deg, var(--primary), var(--secondary) 50%, var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+
+    .typing-line {
+      min-height: 34px;
+      margin-bottom: 20px;
+      color: var(--muted);
+      font: 600 clamp(17px, 2vw, 21px)/1.6 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .typing-line::after {
+      content: "";
+      display: inline-block;
+      width: 9px;
+      height: 1.1em;
+      margin-left: 5px;
+      vertical-align: -0.15em;
+      background: var(--primary);
+      animation: blink 0.8s steps(1) infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    .hero-copy {
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .button {
+      position: relative;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 50px;
+      padding: 0 20px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      color: var(--text);
+      font-weight: 750;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .button.primary {
+      border-color: transparent;
+      background: linear-gradient(115deg, var(--primary), var(--secondary));
+      color: #06101d;
+      box-shadow: 0 14px 40px rgba(102, 227, 255, 0.16);
+    }
+
+    body.light .button.primary {
+      color: white;
+    }
+
+    .button:hover {
+      transform: translateY(-3px);
+      border-color: rgba(102, 227, 255, 0.35);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .mini-hint {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 21px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    kbd {
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-bottom-width: 3px;
+      border-radius: 7px;
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .hero-visual {
+      position: relative;
+      min-height: 610px;
+      display: grid;
+      place-items: center;
+      perspective: 1200px;
+    }
+
+    .orbit-card {
+      position: relative;
+      width: min(500px, 100%);
+      aspect-ratio: 1 / 1.12;
+      overflow: hidden;
+      border-radius: 32px;
+      transform-style: preserve-3d;
+      transition: transform 0.2s ease-out;
+    }
+
+    .orbit-card::before {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background:
+        conic-gradient(from 0deg,
+          transparent 0 12%,
+          rgba(102, 227, 255, 0.18) 16%,
+          transparent 22% 42%,
+          rgba(139, 124, 255, 0.18) 47%,
+          transparent 54% 73%,
+          rgba(86, 240, 181, 0.16) 78%,
+          transparent 84%);
+      animation: rotate 14s linear infinite;
+    }
+
+    .orbit-card::after {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: 31px;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(102, 227, 255, 0.12), transparent 32%),
+        linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.012)),
+        var(--panel-solid);
+    }
+
+    @keyframes rotate {
+      to { transform: rotate(360deg); }
+    }
+
+    .visual-content {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      padding: 30px;
+    }
+
+    .code-window {
+      flex: 1;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(2, 9, 17, 0.72);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    body.light .code-window {
+      background: rgba(241, 247, 255, 0.88);
+    }
+
+    .window-bar {
+      height: 46px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .window-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .window-dot:nth-child(1) { background: #ff6b7d; }
+    .window-dot:nth-child(2) { background: #f8c95b; }
+    .window-dot:nth-child(3) { background: #55d992; }
+
+    .window-title {
+      margin-left: 8px;
+      color: var(--muted);
+      font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .code {
+      padding: 20px;
+      overflow: auto;
+      white-space: pre;
+      color: #b9cbe4;
+      font: 500 12.5px/1.8 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    body.light .code { color: #334b69; }
+
+    .code .purple { color: #c2a6ff; }
+    .code .blue { color: #74dfff; }
+    .code .green { color: #6ce6ae; }
+    .code .pink { color: #ff9aae; }
+    .code .comment { color: #657992; }
+
+    .runtime-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .runtime-item {
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.025);
+    }
+
+    .runtime-value {
+      display: block;
+      color: var(--primary);
+      font: 800 18px/1.2 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .runtime-label {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    section {
+      padding: 110px 0;
+      scroll-margin-top: 90px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 28px;
+      margin-bottom: 42px;
+    }
+
+    .section-number {
+      color: var(--primary);
+      font: 700 13px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .section-title {
+      margin-top: 12px;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+    }
+
+    .section-desc {
+      max-width: 520px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 24px;
+    }
+
+    .about-card,
+    .terminal,
+    .contact-card {
+      border-radius: var(--radius);
+    }
+
+    .about-card {
+      padding: 34px;
+    }
+
+    .about-card p {
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .about-card p + p {
+      margin-top: 16px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 27px;
+    }
+
+    .chip {
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(102, 227, 255, 0.045);
+      color: var(--text);
+      font: 650 12px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .stat-card {
+      min-height: 154px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 23px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+    }
+
+    .stat-icon {
+      color: var(--primary);
+      font: 800 13px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 850;
+      letter-spacing: -0.05em;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 20px;
+    }
+
+    .project-card {
+      position: relative;
+      min-height: 330px;
+      overflow: hidden;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      transform-style: preserve-3d;
+      transition:
+        transform 0.18s ease-out,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+    }
+
+    .project-card:nth-child(1),
+    .project-card:nth-child(4) {
+      grid-column: span 7;
+    }
+
+    .project-card:nth-child(2),
+    .project-card:nth-child(3) {
+      grid-column: span 5;
+    }
+
+    .project-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      background: radial-gradient(
+        500px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(102, 227, 255, 0.12),
+        transparent 40%
+      );
+      transition: opacity 0.25s ease;
+    }
+
+    .project-card:hover {
+      border-color: rgba(102, 227, 255, 0.28);
+      box-shadow: 0 22px 70px rgba(0,0,0,0.18);
+    }
+
+    .project-card:hover::before {
+      opacity: 1;
+    }
+
+    .project-top {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .project-id {
+      color: var(--primary);
+      font: 700 12px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .project-link {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .project-link:hover {
+      transform: translate(3px, -3px);
+      background: rgba(102, 227, 255, 0.08);
+    }
+
+    .project-content {
+      position: relative;
+      z-index: 1;
+      margin-top: 48px;
+      transform: translateZ(28px);
+    }
+
+    .project-card h3 {
+      max-width: 540px;
+      margin-bottom: 14px;
+      font-size: 27px;
+      line-height: 1.2;
+    }
+
+    .project-card p {
+      max-width: 620px;
+      color: var(--muted);
+    }
+
+    .project-tech {
+      position: absolute;
+      left: 28px;
+      bottom: 25px;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .project-tech span {
+      color: var(--muted);
+      font: 650 11px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .project-tech span:not(:last-child)::after {
+      content: " /";
+      color: var(--line);
+    }
+
+    .research-map {
+      display: grid;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .research-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .research-item {
+      position: relative;
+      padding: 21px 22px 21px 58px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: var(--panel);
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .research-item:hover,
+    .research-item.active {
+      transform: translateX(7px);
+      border-color: rgba(102, 227, 255, 0.3);
+    }
+
+    .research-index {
+      position: absolute;
+      left: 20px;
+      top: 21px;
+      color: var(--primary);
+      font: 800 12px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .research-item h3 {
+      font-size: 17px;
+    }
+
+    .research-item p {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .research-display {
+      position: relative;
+      min-height: 520px;
+      overflow: hidden;
+      border-radius: var(--radius);
+    }
+
+    .research-display::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(102, 227, 255, 0.11), transparent 34%),
+        radial-gradient(circle at 70% 65%, rgba(139, 124, 255, 0.08), transparent 30%);
+    }
+
+    .node-map {
+      position: absolute;
+      inset: 0;
+    }
+
+    .node {
+      position: absolute;
+      width: 116px;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      border: 1px solid rgba(102, 227, 255, 0.25);
+      border-radius: 50%;
+      background: rgba(7, 17, 31, 0.78);
+      color: var(--text);
+      text-align: center;
+      font: 750 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      box-shadow: 0 0 40px rgba(102, 227, 255, 0.08);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    body.light .node {
+      background: rgba(255,255,255,0.82);
+    }
+
+    .node.center {
+      left: 50%;
+      top: 50%;
+      width: 150px;
+      transform: translate(-50%, -50%);
+      border-color: rgba(139, 124, 255, 0.42);
+      background:
+        radial-gradient(circle at 40% 30%, rgba(102, 227, 255, 0.14), transparent 45%),
+        rgba(11, 23, 40, 0.92);
+      color: var(--primary);
+      font-size: 14px;
+    }
+
+    body.light .node.center {
+      background: rgba(255,255,255,0.94);
+    }
+
+    .node.n1 { left: 8%; top: 13%; }
+    .node.n2 { right: 8%; top: 12%; }
+    .node.n3 { left: 9%; bottom: 12%; }
+    .node.n4 { right: 8%; bottom: 12%; }
+
+    .node-map[data-mode="agent"] .n1,
+    .node-map[data-mode="agent"] .n4,
+    .node-map[data-mode="graph"] .n2,
+    .node-map[data-mode="graph"] .n3,
+    .node-map[data-mode="systems"] .n1,
+    .node-map[data-mode="systems"] .n2,
+    .node-map[data-mode="hardware"] .n3,
+    .node-map[data-mode="hardware"] .n4 {
+      transform: scale(1.08);
+      border-color: rgba(86, 240, 181, 0.5);
+      color: var(--accent);
+    }
+
+    .connections {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .connections line {
+      stroke: rgba(102, 227, 255, 0.26);
+      stroke-width: 1.2;
+      stroke-dasharray: 7 8;
+      animation: dash 10s linear infinite;
+    }
+
+    @keyframes dash {
+      to { stroke-dashoffset: -140; }
+    }
+
+    .terminal {
+      overflow: hidden;
+      min-height: 470px;
+      background: rgba(4, 11, 20, 0.9);
+    }
+
+    body.light .terminal {
+      background: rgba(246, 250, 255, 0.94);
+    }
+
+    .terminal-bar {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .terminal-title {
+      color: var(--muted);
+      font: 650 12px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .terminal-body {
+      height: 360px;
+      overflow-y: auto;
+      padding: 20px;
+      color: #bcd0e9;
+      font: 500 13px/1.75 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    body.light .terminal-body {
+      color: #314967;
+    }
+
+    .terminal-line {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .terminal-line + .terminal-line {
+      margin-top: 5px;
+    }
+
+    .terminal-system { color: var(--muted); }
+    .terminal-command { color: var(--primary); }
+    .terminal-success { color: var(--accent); }
+    .terminal-error { color: var(--danger); }
+
+    .terminal-input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 20px 18px;
+    }
+
+    .terminal-prompt {
+      color: var(--accent);
+      font: 700 13px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    #terminalInput {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      caret-color: var(--primary);
+      font: 600 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 22px;
+    }
+
+    .contact-card {
+      padding: 34px;
+    }
+
+    .contact-card h3 {
+      max-width: 660px;
+      font-size: clamp(30px, 4vw, 50px);
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+    }
+
+    .contact-card p {
+      max-width: 620px;
+      margin-top: 18px;
+      color: var(--muted);
+    }
+
+    .contact-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .contact-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 82px;
+      padding: 0 22px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: var(--panel);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .contact-link:hover {
+      transform: translateX(7px);
+      border-color: rgba(102, 227, 255, 0.3);
+    }
+
+    .contact-link small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .contact-link strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 15px;
+    }
+
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 35px 0 45px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .command-palette {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      display: none;
+      place-items: start center;
+      padding-top: 15vh;
+      background: rgba(2, 7, 14, 0.62);
+      backdrop-filter: blur(10px);
+    }
+
+    .command-palette.open {
+      display: grid;
+    }
+
+    .palette-box {
+      width: min(620px, calc(100% - 28px));
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--panel-solid);
+      box-shadow: 0 30px 100px rgba(0,0,0,0.4);
+    }
+
+    .palette-input {
+      width: 100%;
+      height: 62px;
+      padding: 0 20px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    .palette-results {
+      padding: 10px;
+    }
+
+    .palette-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 14px;
+      border: 0;
+      border-radius: 12px;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .palette-item:hover,
+    .palette-item.active {
+      background: rgba(102, 227, 255, 0.08);
+    }
+
+    .palette-item span:last-child {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .about-grid,
+      .research-map,
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding-top: 155px;
+      }
+
+      .hero-visual {
+        min-height: 580px;
+      }
+
+      .project-card:nth-child(n) {
+        grid-column: span 6;
+      }
+
+      .section-head {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .section-desc {
+        max-width: 700px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --nav-h: 64px;
+      }
+
+      .container {
+        width: min(100% - 28px, 1180px);
+      }
+
+      .nav-links {
+        position: absolute;
+        top: 74px;
+        left: 0;
+        right: 0;
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--panel-solid);
+        box-shadow: var(--shadow);
+      }
+
+      .nav-links.open {
+        display: flex;
+      }
+
+      .menu-button {
+        display: grid;
+      }
+
+      h1 {
+        font-size: clamp(48px, 16vw, 76px);
+      }
+
+      .hero {
+        gap: 30px;
+      }
+
+      .hero-visual {
+        min-height: 500px;
+      }
+
+      .visual-content {
+        padding: 18px;
+      }
+
+      .runtime-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .runtime-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .project-card:nth-child(n) {
+        grid-column: 1 / -1;
+      }
+
+      .research-display {
+        min-height: 440px;
+      }
+
+      .node {
+        width: 92px;
+        font-size: 10px;
+      }
+
+      .node.center {
+        width: 125px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      footer {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .brand span:last-child {
+        display: none;
+      }
+
+      .nav-inner {
+        padding: 0 10px 0 14px;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+      }
+
+      .button {
+        width: 100%;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .project-card {
+        min-height: 360px;
+      }
+
+      .research-display {
+        min-height: 420px;
+      }
+
+      .node.n1 { left: 2%; top: 8%; }
+      .node.n2 { right: 2%; top: 8%; }
+      .node.n3 { left: 2%; bottom: 8%; }
+      .node.n4 { right: 2%; bottom: 8%; }
+
+      .contact-card {
+        padding: 25px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="network" aria-hidden="true"></canvas>
+  <div class="scroll-progress" id="scrollProgress"></div>
+
+  <nav class="glass">
+    <div class="nav-inner">
+      <a class="brand" href="#home" aria-label="返回首页">
+        <span class="brand-mark"></span>
+        <span>Xu Yinkang.dev</span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="#about">关于</a>
+        <a href="#projects">项目</a>
+        <a href="#research">研究</a>
+        <a href="#terminal">终端</a>
+        <a href="#contact">联系</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="icon-button" id="commandButton" aria-label="打开快捷导航" title="快捷导航">
+          ⌘
+        </button>
+        <button class="icon-button" id="themeButton" aria-label="切换主题" title="切换主题">
+          ◐
+        </button>
+        <button class="menu-button" id="menuButton" aria-label="打开菜单">
+          ☰
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero container" id="home">
+      <div class="hero-content reveal">
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          OPEN TO RESEARCH & COLLABORATION
+        </div>
+
+        <p class="eyebrow">Software Engineering · AI Security</p>
+
+        <h1>
+          Building
+          <span class="gradient-text">Trustworthy</span>
+          Intelligent Systems.
+        </h1>
+
+        <div class="typing-line">
+          <span id="typingText"></span>
+        </div>
+
+        <p class="hero-copy">
+          我是徐银康，关注智能体安全、图学习安全与可信人工智能系统。
+          我希望让智能体不仅更强，也能理解权限、来源和行为边界。
+        </p>
+
+        <div class="hero-actions">
+          <a class="button primary" href="#projects">
+            查看项目 <span>↗</span>
+          </a>
+          <a class="button" href="resume.pdf" target="_blank">
+            查看简历 <span>⌁</span>
+          </a>
+          <button class="button" id="runDemoButton">
+            运行交互演示 <span>▶</span>
+          </button>
+        </div>
+
+        <div class="mini-hint">
+          按下 <kbd>Ctrl</kbd> + <kbd>K</kbd> 快速导航
+        </div>
+      </div>
+
+      <div class="hero-visual reveal">
+        <div class="orbit-card glass" id="orbitCard">
+          <div class="visual-content">
+            <div class="code-window">
+              <div class="window-bar">
+                <span class="window-dot"></span>
+                <span class="window-dot"></span>
+                <span class="window-dot"></span>
+                <span class="window-title">agent_policy.py</span>
+              </div>
+
+              <div class="code"><span class="purple">class</span> <span class="blue">TrustworthyAgent</span>:
+    <span class="purple">def</span> <span class="green">authorize</span>(self, action, context):
+        intent = self.<span class="blue">parse_intent</span>(context.user)
+        source = self.<span class="blue">trace_provenance</span>(action)
+
+        <span class="purple">if not</span> self.<span class="blue">within_scope</span>(
+            action=action,
+            intent=intent,
+            source=source,
+        ):
+            <span class="purple">raise</span> <span class="pink">PermissionError</span>(
+                <span class="green">"Action exceeds delegated authority"</span>
+            )
+
+        <span class="purple">return</span> {
+            <span class="green">"status"</span>: <span class="green">"authorized"</span>,
+            <span class="green">"risk"</span>: self.<span class="blue">estimate_risk</span>(action),
+            <span class="green">"audit"</span>: self.<span class="blue">build_trace</span>(action),
+        }
+
+<span class="comment"># Security should be a runtime property.</span></div>
+            </div>
+
+            <div class="runtime-strip">
+              <div class="runtime-item">
+                <span class="runtime-value" data-live="latency">12.4ms</span>
+                <span class="runtime-label">policy latency</span>
+              </div>
+              <div class="runtime-item">
+                <span class="runtime-value" data-live="coverage">97.8%</span>
+                <span class="runtime-label">provenance coverage</span>
+              </div>
+              <div class="runtime-item">
+                <span class="runtime-value" data-live="risk">LOW</span>
+                <span class="runtime-label">runtime risk</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container" id="about">
+      <div class="section-head reveal">
+        <div>
+          <div class="section-number">01 / ABOUT</div>
+          <h2 class="section-title">研究问题驱动的<br />软件工程实践者</h2>
+        </div>
+        <p class="section-desc">
+          从系统实现、实验复现到论文表达，我关注的不只是“模型能否运行”，
+          更关注它在真实环境中是否可靠、可解释、可控制。
+        </p>
+      </div>
+
+      <div class="about-grid">
+        <article class="about-card glass reveal">
+          <p>
+            我目前专注于<strong>工具型智能体的间接提示注入与动作授权</strong>：
+            如何根据用户真实意图生成最小但充分的权限，并在运行时验证每个工具、
+            参数和数据来源是否越界。
+          </p>
+          <p>
+            同时，我也持续开展鲁棒图学习、多元时间序列异常检测、
+            乘法器结构生成与强化学习优化等研究。
+          </p>
+
+          <div class="chips">
+            <span class="chip">Python</span>
+            <span class="chip">PyTorch</span>
+            <span class="chip">LLM Agents</span>
+            <span class="chip">Graph Learning</span>
+            <span class="chip">Reinforcement Learning</span>
+            <span class="chip">AI Security</span>
+            <span class="chip">Linux</span>
+            <span class="chip">Verilog</span>
+          </div>
+        </article>
+
+        <div class="stats-grid reveal">
+          <div class="stat-card">
+            <span class="stat-icon">FOCUS_01</span>
+            <div>
+              <div class="stat-value counter" data-target="4">0</div>
+              <div class="stat-label">核心研究方向</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-icon">MODE_02</span>
+            <div>
+              <div class="stat-value">R&D</div>
+              <div class="stat-label">研究与工程并重</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-icon">STATUS_03</span>
+            <div>
+              <div class="stat-value">24/7</div>
+              <div class="stat-label">持续学习与构建</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-icon">GOAL_04</span>
+            <div>
+              <div class="stat-value">SAFE</div>
+              <div class="stat-label">可信智能系统</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container" id="projects">
+      <div class="section-head reveal">
+        <div>
+          <div class="section-number">02 / SELECTED WORK</div>
+          <h2 class="section-title">把复杂问题<br />变成可运行系统</h2>
+        </div>
+        <p class="section-desc">
+          这里可以替换为你的真实项目链接、论文页面、代码仓库或演示视频。
+        </p>
+      </div>
+
+      <div class="project-grid">
+        <article class="project-card reveal">
+          <div class="project-top">
+            <span class="project-id">PROJECT / 001</span>
+            <a class="project-link" href="https://github.com/Blue4u0610/Blue4u0610.github.io/new/main" aria-label="打开项目">↗</a>
+          </div>
+          <div class="project-content">
+            <h3>Delegation-Aware Authorization for Tool-Using Agents</h3>
+            <p>
+              为工具型智能体设计面向委托关系、对象级来源和参数影响边界的动态授权机制，
+              阻止外部内容诱导智能体执行超出用户意图的动作。
+            </p>
+          </div>
+          <div class="project-tech">
+            <span>LLM Agent</span>
+            <span>Provenance</span>
+            <span>Runtime Policy</span>
+          </div>
+        </article>
+
+        <article class="project-card reveal">
+          <div class="project-top">
+            <span class="project-id">PROJECT / 002</span>
+            <a class="project-link" href="https://github.com/Blue4u0610/Blue4u0610.github.io" aria-label="打开项目">↗</a>
+          </div>
+          <div class="project-content">
+            <h3>Robust Graph Learning & Backdoor Defense</h3>
+            <p>
+              面向图神经网络中的结构、属性和混合后门攻击，
+              研究攻击检测、鲁棒训练与跨攻击类型的泛化防御。
+            </p>
+          </div>
+          <div class="project-tech">
+            <span>GNN</span>
+            <span>PyTorch</span>
+            <span>Security</span>
+          </div>
+        </article>
+
+        <article class="project-card reveal">
+          <div class="project-top">
+            <span class="project-id">PROJECT / 003</span>
+            <a class="project-link" href="https://github.com/Blue4u0610/Blue4u0610.github.io" aria-label="打开项目">↗</a>
+          </div>
+          <div class="project-content">
+            <h3>Cloud-Edge-Device Anomaly Detection</h3>
+            <p>
+              使用多出口神经网络和强化学习卸载策略，
+              在准确率、延迟和能耗之间进行动态权衡。
+            </p>
+          </div>
+          <div class="project-tech">
+            <span>MTS</span>
+            <span>DQN</span>
+            <span>Edge AI</span>
+          </div>
+        </article>
+
+        <article class="project-card reveal">
+          <div class="project-top">
+            <span class="project-id">PROJECT / 004</span>
+            <a class="project-link" href="https://github.com/Blue4u0610/Blue4u0610.github.io" aria-label="打开项目">↗</a>
+          </div>
+          <div class="project-content">
+            <h3>GPT-Based Multiplier Structure Generation</h3>
+            <p>
+              将压缩树和条件加法器建模为结构化序列生成问题，
+              结合强化学习与关键路径局部搜索优化面积和时延。
+            </p>
+          </div>
+          <div class="project-tech">
+            <span>Transformer</span>
+            <span>RL</span>
+            <span>EDA</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="container" id="research">
+      <div class="section-head reveal">
+        <div>
+          <div class="section-number">03 / RESEARCH MAP</div>
+          <h2 class="section-title">研究兴趣图谱</h2>
+        </div>
+        <p class="section-desc">
+          点击左侧方向，右侧节点会动态强调对应的技术要素。
+        </p>
+      </div>
+
+      <div class="research-map">
+        <div class="research-list reveal">
+          <article class="research-item active" data-mode="agent">
+            <span class="research-index">A1</span>
+            <h3>智能体安全与动态授权</h3>
+            <p>Prompt Injection · Provenance · Least Privilege</p>
+          </article>
+
+          <article class="research-item" data-mode="graph">
+            <span class="research-index">A2</span>
+            <h3>鲁棒图学习</h3>
+            <p>Backdoor Attack · Robustness · Graph Security</p>
+          </article>
+
+          <article class="research-item" data-mode="systems">
+            <span class="research-index">A3</span>
+            <h3>智能系统与边缘计算</h3>
+            <p>Anomaly Detection · Offloading · Efficiency</p>
+          </article>
+
+          <article class="research-item" data-mode="hardware">
+            <span class="research-index">A4</span>
+            <h3>AI for Hardware Design</h3>
+            <p>Multiplier · Structure Generation · Optimization</p>
+          </article>
+        </div>
+
+        <div class="research-display glass reveal">
+          <svg class="connections" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <line x1="50" y1="50" x2="20" y2="23"></line>
+            <line x1="50" y1="50" x2="80" y2="23"></line>
+            <line x1="50" y1="50" x2="20" y2="78"></line>
+            <line x1="50" y1="50" x2="80" y2="78"></line>
+          </svg>
+
+          <div class="node-map" id="nodeMap" data-mode="agent">
+            <div class="node center" id="centerNode">Trustworthy<br />AI Systems</div>
+            <div class="node n1">Intent<br />Alignment</div>
+            <div class="node n2">Runtime<br />Policy</div>
+            <div class="node n3">Efficient<br />Inference</div>
+            <div class="node n4">Data<br />Provenance</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container" id="terminal">
+      <div class="section-head reveal">
+        <div>
+          <div class="section-number">04 / INTERACTIVE TERMINAL</div>
+          <h2 class="section-title">不只是展示，<br />试着输入命令</h2>
+        </div>
+        <p class="section-desc">
+          可输入 <code>help</code>、<code>projects</code>、<code>research</code>、
+          <code>contact</code>、<code>theme</code> 或 <code>clear</code>。
+        </p>
+      </div>
+
+      <div class="terminal glass reveal">
+        <div class="terminal-bar">
+          <div>
+            <span class="window-dot"></span>
+            <span class="window-dot"></span>
+            <span class="window-dot"></span>
+          </div>
+          <span class="terminal-title">visitor@xuyinkang.dev:~</span>
+          <span class="terminal-title">interactive shell</span>
+        </div>
+
+        <div class="terminal-body" id="terminalOutput" aria-live="polite">
+          <div class="terminal-line terminal-system">XuOS 1.0.0 — Personal Research Interface</div>
+          <div class="terminal-line terminal-success">System ready. Type "help" to begin.</div>
+        </div>
+
+        <div class="terminal-input-row">
+          <span class="terminal-prompt">visitor@site:~$</span>
+          <input
+            id="terminalInput"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="终端命令输入"
+            placeholder="输入 help 并回车"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section class="container" id="contact">
+      <div class="section-head reveal">
+        <div>
+          <div class="section-number">05 / CONTACT</div>
+          <h2 class="section-title">一起讨论值得<br />深入的问题</h2>
+        </div>
+      </div>
+
+      <div class="contact-grid">
+        <article class="contact-card glass reveal">
+          <h3>
+            Research ideas become valuable
+            <span class="gradient-text">when they are built.</span>
+          </h3>
+          <p>
+            欢迎围绕智能体安全、图学习安全、可信 AI 系统和科研合作进行交流。
+            请将下面的邮箱与链接替换成你的真实信息。
+          </p>
+
+          <div class="hero-actions">
+            <a class="button primary" href="mailto:1370379652@qq.com">
+              发送邮件 ↗
+            </a>
+            <a class="button" href="resume.pdf" target="_blank">
+              下载简历
+            </a>
+          </div>
+        </article>
+
+        <div class="contact-links reveal">
+          <a class="contact-link" href="https://github.com/Blue4u0610" target="_blank" rel="noopener noreferrer">
+            <span>
+              <small>CODE & OPEN SOURCE</small>
+              <strong>GitHub</strong>
+            </span>
+            <span>↗</span>
+          </a>
+
+          <a class="contact-link" href="mailto:1370379652@qq.com">
+            <span>
+              <small>DIRECT MESSAGE</small>
+              <strong>1370379652@qq.com</strong>
+            </span>
+            <span>↗</span>
+          </a>
+
+          <a class="contact-link" href="https://github.com/Blue4u0610/Blue4u0610.github.io" target="_blank">
+            <span>
+              <small>ACADEMIC PROFILE</small>
+              <strong>Google Scholar</strong>
+            </span>
+            <span>↗</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container">
+    <span>© 2026 Xu Yinkang. Built with native HTML, CSS & JavaScript.</span>
+    <span>Designed for curiosity, research and reliable systems.</span>
+  </footer>
+
+  <div class="command-palette" id="commandPalette" aria-hidden="true">
+    <div class="palette-box">
+      <input
+        class="palette-input"
+        id="paletteInput"
+        type="text"
+        placeholder="搜索页面或执行命令..."
+        autocomplete="off"
+      />
+      <div class="palette-results" id="paletteResults"></div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- 页面基础配置 ----------
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const body = document.body;
+
+    // ---------- 鼠标光晕 ----------
+    window.addEventListener("pointermove", (event) => {
+      body.style.setProperty("--cursor-x", `${event.clientX}px`);
+      body.style.setProperty("--cursor-y", `${event.clientY}px`);
+    });
+
+    // ---------- 顶部滚动进度 ----------
+    const scrollProgress = document.getElementById("scrollProgress");
+
+    function updateScrollProgress() {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = max > 0 ? (window.scrollY / max) * 100 : 0;
+      scrollProgress.style.width = `${progress}%`;
+    }
+
+    window.addEventListener("scroll", updateScrollProgress, { passive: true });
+    updateScrollProgress();
+
+    // ---------- 移动端菜单 ----------
+    const menuButton = document.getElementById("menuButton");
+    const navLinks = document.getElementById("navLinks");
+
+    menuButton.addEventListener("click", () => {
+      navLinks.classList.toggle("open");
+    });
+
+    navLinks.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => navLinks.classList.remove("open"));
+    });
+
+    // ---------- 明暗主题 ----------
+    const themeButton = document.getElementById("themeButton");
+    const savedTheme = localStorage.getItem("site-theme");
+
+    if (savedTheme === "light") {
+      body.classList.add("light");
+    }
+
+    function toggleTheme() {
+      body.classList.toggle("light");
+      localStorage.setItem(
+        "site-theme",
+        body.classList.contains("light") ? "light" : "dark"
+      );
+    }
+
+    themeButton.addEventListener("click", toggleTheme);
+
+    // ---------- 打字机 ----------
+    const typingText = document.getElementById("typingText");
+    const phrases = [
+      "I research secure tool-using agents.",
+      "I build systems from papers to prototypes.",
+      "I care about provenance, authorization and robustness.",
+      "我用代码验证研究设想。"
+    ];
+
+    let phraseIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+
+    function typeLoop() {
+      const phrase = phrases[phraseIndex];
+
+      if (!deleting) {
+        charIndex += 1;
+        typingText.textContent = phrase.slice(0, charIndex);
+
+        if (charIndex === phrase.length) {
+          deleting = true;
+          setTimeout(typeLoop, 1300);
+          return;
+        }
+      } else {
+        charIndex -= 1;
+        typingText.textContent = phrase.slice(0, charIndex);
+
+        if (charIndex === 0) {
+          deleting = false;
+          phraseIndex = (phraseIndex + 1) % phrases.length;
+        }
+      }
+
+      setTimeout(typeLoop, deleting ? 35 : 58);
+    }
+
+    if (reducedMotion) {
+      typingText.textContent = phrases[0];
+    } else {
+      typeLoop();
+    }
+
+    // ---------- 滚动显现 ----------
+    const revealElements = document.querySelectorAll(".reveal");
+
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+
+    revealElements.forEach((element) => revealObserver.observe(element));
+
+    // ---------- 导航高亮 ----------
+    const sectionElements = document.querySelectorAll("main section[id]");
+    const navAnchors = [...document.querySelectorAll(".nav-links a")];
+
+    const sectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+
+          navAnchors.forEach((anchor) => {
+            anchor.classList.toggle(
+              "active",
+              anchor.getAttribute("href") === `#${entry.target.id}`
+            );
+          });
+        });
+      },
+      { rootMargin: "-35% 0px -55% 0px" }
+    );
+
+    sectionElements.forEach((section) => sectionObserver.observe(section));
+
+    // ---------- 数字计数 ----------
+    const counters = document.querySelectorAll(".counter");
+
+    const counterObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+
+          const element = entry.target;
+          const target = Number(element.dataset.target || "0");
+          let current = 0;
+
+          const timer = setInterval(() => {
+            current += 1;
+            element.textContent = String(current);
+
+            if (current >= target) {
+              clearInterval(timer);
+            }
+          }, 140);
+
+          counterObserver.unobserve(element);
+        });
+      },
+      { threshold: 0.8 }
+    );
+
+    counters.forEach((counter) => counterObserver.observe(counter));
+
+    // ---------- 主视觉卡片视差 ----------
+    const orbitCard = document.getElementById("orbitCard");
+
+    orbitCard.addEventListener("pointermove", (event) => {
+      if (reducedMotion) return;
+
+      const rect = orbitCard.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width - 0.5;
+      const y = (event.clientY - rect.top) / rect.height - 0.5;
+
+      orbitCard.style.transform =
+        `rotateY(${x * 10}deg) rotateX(${-y * 10}deg) translateY(-4px)`;
+    });
+
+    orbitCard.addEventListener("pointerleave", () => {
+      orbitCard.style.transform = "";
+    });
+
+    // ---------- 项目卡片 3D 倾斜与光斑 ----------
+    document.querySelectorAll(".project-card").forEach((card) => {
+      card.addEventListener("pointermove", (event) => {
+        if (reducedMotion) return;
+
+        const rect = card.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const rx = ((y / rect.height) - 0.5) * -6;
+        const ry = ((x / rect.width) - 0.5) * 8;
+
+        card.style.setProperty("--mx", `${x}px`);
+        card.style.setProperty("--my", `${y}px`);
+        card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+      });
+
+      card.addEventListener("pointerleave", () => {
+        card.style.transform = "";
+      });
+    });
+
+    // ---------- 研究图谱切换 ----------
+    const researchItems = document.querySelectorAll(".research-item");
+    const nodeMap = document.getElementById("nodeMap");
+    const centerNode = document.getElementById("centerNode");
+
+    const centerLabels = {
+      agent: "Trustworthy<br>AI Systems",
+      graph: "Robust<br>Graph Learning",
+      systems: "Cloud-Edge<br>Intelligence",
+      hardware: "AI for<br>Hardware"
+    };
+
+    researchItems.forEach((item) => {
+      item.addEventListener("click", () => {
+        researchItems.forEach((node) => node.classList.remove("active"));
+        item.classList.add("active");
+
+        const mode = item.dataset.mode;
+        nodeMap.dataset.mode = mode;
+        centerNode.innerHTML = centerLabels[mode];
+      });
+    });
+
+    // ---------- 交互终端 ----------
+    const terminalInput = document.getElementById("terminalInput");
+    const terminalOutput = document.getElementById("terminalOutput");
+    const runDemoButton = document.getElementById("runDemoButton");
+
+    const commands = {
+      help: [
+        ["terminal-system", "Available commands:"],
+        ["terminal-success", "help       查看全部命令"],
+        ["terminal-success", "about      查看个人简介"],
+        ["terminal-success", "projects   查看项目列表"],
+        ["terminal-success", "research   查看研究方向"],
+        ["terminal-success", "contact    查看联系方式"],
+        ["terminal-success", "theme      切换明暗主题"],
+        ["terminal-success", "clear      清空终端"],
+        ["terminal-success", "whoami     查看当前访客身份"],
+        ["terminal-success", "sudo       触发彩蛋"]
+      ],
+      about: [
+        ["terminal-system", "Xu Yinkang — Software Engineering student and AI security researcher."],
+        ["terminal-success", "Focus: trustworthy agents, graph security, efficient intelligent systems."]
+      ],
+      projects: [
+        ["terminal-system", "01  Delegation-Aware Authorization for Tool-Using Agents"],
+        ["terminal-system", "02  Robust Graph Learning & Backdoor Defense"],
+        ["terminal-system", "03  Cloud-Edge-Device Anomaly Detection"],
+        ["terminal-system", "04  GPT-Based Multiplier Structure Generation"]
+      ],
+      research: [
+        ["terminal-system", "agent-security  provenance  runtime-policy  graph-learning  edge-ai  ai-for-eda"]
+      ],
+      contact: [
+        ["terminal-success", "Email  : 1370379652@qq.com"],
+        ["terminal-success", "GitHub : github.com/Blue4u0610"]
+      ],
+      whoami: [
+        ["terminal-system", "visitor"],
+        ["terminal-success", "permission: read-only · curiosity: unlimited"]
+      ],
+      sudo: [
+        ["terminal-error", "Permission denied: this website already gives you full access to ideas."]
+      ],
+      theme: []
+    };
+
+    function appendTerminalLine(text, className = "terminal-system") {
+      const line = document.createElement("div");
+      line.className = `terminal-line ${className}`;
+      line.textContent = text;
+      terminalOutput.appendChild(line);
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    }
+
+    function runCommand(rawCommand) {
+      const command = rawCommand.trim().toLowerCase();
+
+      if (!command) return;
+
+      appendTerminalLine(`visitor@site:~$ ${rawCommand}`, "terminal-command");
+
+      if (command === "clear") {
+        terminalOutput.innerHTML = "";
+        return;
+      }
+
+      if (command === "theme") {
+        toggleTheme();
+        appendTerminalLine(
+          `Theme changed to ${body.classList.contains("light") ? "light" : "dark"}.`,
+          "terminal-success"
+        );
+        return;
+      }
+
+      if (command === "demo") {
+        runSecurityDemo();
+        return;
+      }
+
+      if (!commands[command]) {
+        appendTerminalLine(
+          `Command not found: ${command}. Type "help".`,
+          "terminal-error"
+        );
+        return;
+      }
+
+      commands[command].forEach(([className, text]) => {
+        appendTerminalLine(text, className);
+      });
+    }
+
+    terminalInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        runCommand(terminalInput.value);
+        terminalInput.value = "";
+      }
+    });
+
+    function runSecurityDemo() {
+      document.getElementById("terminal").scrollIntoView({ behavior: "smooth" });
+
+      const sequence = [
+        ["terminal-command", "visitor@site:~$ demo"],
+        ["terminal-system", "[1/4] Parsing user intent..."],
+        ["terminal-success", "      intent = schedule_meeting(project=Agent Security)"],
+        ["terminal-system", "[2/4] Tracing object provenance..."],
+        ["terminal-success", "      source = email_from_authorized_principal"],
+        ["terminal-system", "[3/4] Checking delegated slots..."],
+        ["terminal-success", "      start_time ✓  attendee ✓  payment ✗"],
+        ["terminal-system", "[4/4] Evaluating action boundary..."],
+        ["terminal-success", "      AUTHORIZED with auditable trace."],
+      ];
+
+      let delay = 0;
+      sequence.forEach(([className, text]) => {
+        setTimeout(() => appendTerminalLine(text, className), delay);
+        delay += 260;
+      });
+
+      setTimeout(() => terminalInput.focus(), delay + 200);
+    }
+
+    runDemoButton.addEventListener("click", runSecurityDemo);
+
+    // ---------- 快捷命令面板 ----------
+    const commandPalette = document.getElementById("commandPalette");
+    const commandButton = document.getElementById("commandButton");
+    const paletteInput = document.getElementById("paletteInput");
+    const paletteResults = document.getElementById("paletteResults");
+
+    const paletteActions = [
+      { label: "前往首页", meta: "#home", action: () => goTo("home") },
+      { label: "前往关于", meta: "#about", action: () => goTo("about") },
+      { label: "前往项目", meta: "#projects", action: () => goTo("projects") },
+      { label: "前往研究图谱", meta: "#research", action: () => goTo("research") },
+      { label: "打开交互终端", meta: "#terminal", action: () => goTo("terminal") },
+      { label: "查看联系方式", meta: "#contact", action: () => goTo("contact") },
+      { label: "切换明暗主题", meta: "theme", action: toggleTheme },
+      { label: "运行安全演示", meta: "demo", action: runSecurityDemo }
+    ];
+
+    function goTo(id) {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    function openPalette() {
+      commandPalette.classList.add("open");
+      commandPalette.setAttribute("aria-hidden", "false");
+      paletteInput.value = "";
+      renderPalette("");
+      setTimeout(() => paletteInput.focus(), 30);
+    }
+
+    function closePalette() {
+      commandPalette.classList.remove("open");
+      commandPalette.setAttribute("aria-hidden", "true");
+    }
+
+    function renderPalette(query) {
+      const normalized = query.trim().toLowerCase();
+      const matches = paletteActions.filter((item) =>
+        `${item.label} ${item.meta}`.toLowerCase().includes(normalized)
+      );
+
+      paletteResults.innerHTML = "";
+
+      matches.forEach((item, index) => {
+        const button = document.createElement("button");
+        button.className = `palette-item ${index === 0 ? "active" : ""}`;
+        button.innerHTML = `<span>${item.label}</span><span>${item.meta}</span>`;
+        button.addEventListener("click", () => {
+          closePalette();
+          item.action();
+        });
+        paletteResults.appendChild(button);
+      });
+    }
+
+    commandButton.addEventListener("click", openPalette);
+    paletteInput.addEventListener("input", () => renderPalette(paletteInput.value));
+
+    paletteInput.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closePalette();
+      }
+
+      if (event.key === "Enter") {
+        const active = paletteResults.querySelector(".palette-item");
+        active?.click();
+      }
+    });
+
+    commandPalette.addEventListener("click", (event) => {
+      if (event.target === commandPalette) {
+        closePalette();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      const isShortcut = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k";
+
+      if (isShortcut) {
+        event.preventDefault();
+        openPalette();
+      }
+
+      if (event.key === "Escape") {
+        closePalette();
+      }
+    });
+
+    // ---------- 实时运行状态 ----------
+    const latencyElement = document.querySelector('[data-live="latency"]');
+    const coverageElement = document.querySelector('[data-live="coverage"]');
+    const riskElement = document.querySelector('[data-live="risk"]');
+
+    setInterval(() => {
+      const latency = (11.5 + Math.random() * 2.4).toFixed(1);
+      const coverage = (97.2 + Math.random() * 1.1).toFixed(1);
+
+      latencyElement.textContent = `${latency}ms`;
+      coverageElement.textContent = `${coverage}%`;
+      riskElement.textContent = Math.random() > 0.92 ? "WATCH" : "LOW";
+    }, 1800);
+
+    // ---------- Canvas 粒子网络 ----------
+    const canvas = document.getElementById("network");
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+    let pointer = { x: -9999, y: -9999 };
+
+    function resizeCanvas() {
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(window.innerWidth * ratio);
+      canvas.height = Math.floor(window.innerHeight * ratio);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+      const count = Math.min(
+        105,
+        Math.max(42, Math.floor((window.innerWidth * window.innerHeight) / 17000))
+      );
+
+      particles = Array.from({ length: count }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        vx: (Math.random() - 0.5) * 0.34,
+        vy: (Math.random() - 0.5) * 0.34,
+        r: Math.random() * 1.6 + 0.6
+      }));
+    }
+
+    window.addEventListener("pointermove", (event) => {
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+    });
+
+    window.addEventListener("pointerleave", () => {
+      pointer.x = -9999;
+      pointer.y = -9999;
+    });
+
+    function drawNetwork() {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+      const particleColor = body.classList.contains("light")
+        ? "rgba(0, 120, 165, 0.45)"
+        : "rgba(102, 227, 255, 0.55)";
+
+      const lineBase = body.classList.contains("light")
+        ? [0, 105, 150]
+        : [102, 227, 255];
+
+      particles.forEach((particle) => {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+
+        if (particle.x < -20) particle.x = window.innerWidth + 20;
+        if (particle.x > window.innerWidth + 20) particle.x = -20;
+        if (particle.y < -20) particle.y = window.innerHeight + 20;
+        if (particle.y > window.innerHeight + 20) particle.y = -20;
+
+        const dx = pointer.x - particle.x;
+        const dy = pointer.y - particle.y;
+        const distance = Math.hypot(dx, dy);
+
+        if (distance < 150 && distance > 0) {
+          particle.x -= (dx / distance) * 0.18;
+          particle.y -= (dy / distance) * 0.18;
+        }
+
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.r, 0, Math.PI * 2);
+        ctx.fillStyle = particleColor;
+        ctx.fill();
+      });
+
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const a = particles[i];
+          const b = particles[j];
+          const distance = Math.hypot(a.x - b.x, a.y - b.y);
+
+          if (distance < 118) {
+            const alpha = (1 - distance / 118) * 0.18;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.strokeStyle = `rgba(${lineBase[0]}, ${lineBase[1]}, ${lineBase[2]}, ${alpha})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      }
+
+      requestAnimationFrame(drawNetwork);
+    }
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    if (!reducedMotion) {
+      drawNetwork();
+    } else {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    }
+  </script>
+</body>
+</html>
+'''
+
+path = Path("/mnt/data/index.html")
+path.write_text(html, encoding="utf-8")
+
+print(f"已生成: {path}")
+print(f"文件大小: {path.stat().st_size / 1024:.1f} KB")
